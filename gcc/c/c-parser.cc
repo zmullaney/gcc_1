@@ -2224,6 +2224,84 @@ c_parser_declaration_or_fndef (c_parser *parser, bool fndef_ok,
 			       /* = NULL */,
 			       bool *fallthru_attr_p /* = NULL */)
 {
+    /* Edit by Zach Mullaney for ECE361G: */
+    if(c_parser_next_token_is (parser, CPP_OPEN_SQUARE)) {
+      c_parser_consume_token (parser);
+      if(c_parser_next_token_is (parser, CPP_OPEN_SQUARE))
+        {
+      // default values for a and b shouldn't be used
+      int a = 0; int b = 1;
+      if (c_parser_next_token_is (parser, CPP_NAME)) 
+        {
+          a = c_parser_peek_token (parser)->value;
+          c_parser_consume_token (parser);
+        }
+      else
+        {
+          c_parser_error (parser, "expected identifier 'a' (doublesquare)");
+          c_parser_skip_until_found (parser, CPP_CLOSE_SQUARE, NULL);
+          // include 2 of these lines in each error to account for second closing bracket
+          c_parser_skip_until_found (parser, CPP_CLOSE_SQUARE, NULL);
+          return NULL_TREE;
+        }
+
+      if (c_parser_next_token_is (parser, CPP_COMMA)) 
+        {
+          c_parser_consume_token (parser);
+        }
+      else
+        {
+          c_parser_error (parser, "expected comma 'a' (doublesquare)");
+          c_parser_skip_until_found (parser, CPP_CLOSE_SQUARE, NULL);
+          c_parser_skip_until_found (parser, CPP_CLOSE_SQUARE, NULL);
+          return NULL_TREE;
+        }
+
+      // new syntax expects another int next: [[int a, int b, expression]]
+      if (c_parser_next_token_is (parser, CPP_NAME)) 
+        {
+          b = c_parser_peek_token (parser)->value;
+          c_parser_consume_token (parser);
+        }
+      else
+        {
+          c_parser_error (parser, "expected identifier 'b' (doublesquare)");
+          c_parser_skip_until_found (parser, CPP_CLOSE_SQUARE, NULL);
+          c_parser_skip_until_found (parser, CPP_CLOSE_SQUARE, NULL);
+          return NULL_TREE;
+        }
+
+      if (c_parser_next_token_is (parser, CPP_COMMA)) 
+        {
+          c_parser_consume_token (parser);
+        }
+      else
+        {
+          c_parser_error (parser, "expected comma 'b' (doublesquare)");
+          c_parser_skip_until_found (parser, CPP_CLOSE_SQUARE, NULL);
+          c_parser_skip_until_found (parser, CPP_CLOSE_SQUARE, NULL);
+          return NULL_TREE;
+        }
+
+        // next, determine how many times the expression will be evaluated (if at all)
+        if(b < a) {
+          c_parser_error (parser, "expected b >= a (doublesquare)");
+          c_parser_skip_until_found (parser, CPP_CLOSE_SQUARE, NULL);
+          c_parser_skip_until_found (parser, CPP_CLOSE_SQUARE, NULL);
+          return NULL_TREE;
+        }
+
+        // evaluate expression while a <= b
+        while(a <= b) {
+          // call this function to handle function/expression
+          c_parser_declaration_or_fndef (parser, true, true, true, false, true);
+          a++;
+        }
+
+        
+      }
+    }
+    /* End of edit */
   struct c_declspecs *specs;
   tree prefix_attrs;
   tree all_prefix_attrs;
